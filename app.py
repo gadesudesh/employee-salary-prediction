@@ -187,6 +187,11 @@ def home():
 def job_titles():
     return jsonify(VALID_JOB_TITLES)
 
+@app.route("/health", methods=["GET"])
+def health():
+    """Lightweight health check — used by UptimeRobot to keep the service awake."""
+    return jsonify({"status": "ok"})
+
 # ---------------------------------------------------------------------------
 # Auth API Routes
 # ---------------------------------------------------------------------------
