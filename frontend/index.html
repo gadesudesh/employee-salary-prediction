@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SalaryAI Pro — Enterprise Salary Prediction &amp; ML Analytics</title>
+  <meta name="description" content="AI-powered employee salary prediction and labor market analytics platform built with Flask, scikit-learn, and a tuned Random Forest Regressor." />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js for interactive analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Ambient Glow Effects -->
+  <div class="ambient-glow" aria-hidden="true"></div>
+  <div class="ambient-glow-2" aria-hidden="true"></div>
+
+  <div class="app-container">
+
+    <!-- ====================================================================
+         Sidebar Navigation
+         ==================================================================== -->
+    <aside class="sidebar" id="sidebar">
+      
+      <!-- Brand Header -->
+      <div class="sidebar-header">
+        <div class="brand-icon">💼</div>
+        <div class="brand-info">
+          <h2>SalaryAI Pro</h2>
+          <span class="badge-version">v2.4 Enterprise</span>
+        </div>
+      </div>
+
+      <!-- User Profile Widget -->
+      <div class="user-widget" id="userWidget">
+        <div class="user-widget-left">
+          <div class="user-avatar" id="userAvatar">G</div>
+          <div class="user-details">
+            <span class="user-name" id="userNameDisplay">Guest User</span>
+            <span class="user-role-badge" id="userRoleDisplay">Visitor</span>
+          </div>
+        </div>
+        <button class="btn-auth-trigger" id="authBtnTrigger" onclick="openAuthModal()">Sign In</button>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="nav-section-title">Navigation</div>
+      <ul class="nav-links">
+        <li class="nav-item active" data-view="view-predict">
+          <span class="nav-icon">🎯</span>
+          <span>Predict Salary</span>
+        </li>
+        <li class="nav-item" data-view="view-eda">
+          <span class="nav-icon">📊</span>
+          <span>EDA &amp; Insights</span>
+        </li>
+        <li class="nav-item" data-view="view-metrics">
+          <span class="nav-icon">📈</span>
+          <span>Model Performance</span>
+        </li>
+        <li class="nav-item" data-view="view-history">
+          <span class="nav-icon">🕒</span>
+          <span>Prediction History</span>
+        </li>
+        <li class="nav-item" data-view="view-about">
+          <span class="nav-icon">ℹ️</span>
+          <span>About Project</span>
+        </li>
+      </ul>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <div class="status-pill">
+          <div class="status-dot"></div>
+          <span>ML Pipeline Online (96.4% R²)</span>
+        </div>
+        <div class="footer-actions">
+          <span style="font-size:0.75rem; color:var(--text-dim);">AIML Capstone 2026</span>
+          <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light / Dark Mode">
+            <span id="themeIcon">☀️</span>
+            <span id="themeLabel">Light</span>
+          </button>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ====================================================================
+         Main Wrapper
+         ==================================================================== -->
+    <div class="main-wrapper">
+
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-toggle" id="mobileMenuBtn" aria-label="Toggle menu">☰</button>
+          <span class="view-heading" id="topbarViewHeading">🎯 Salary Predictor</span>
+        </div>
+        <div class="topbar-right">
+          <button class="quick-demo-btn" id="quickDemoBtn" title="Fill sample candidate inputs">
+            <span>⚡</span>
+            <span>Fill Sample Data</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Scrollable Content -->
+      <main class="view-content">
+
+        <!-- ================================================================
+             VIEW 1: Predict Salary (Default View)
+             ================================================================ -->
+        <section class="view-panel active" id="view-predict">
+          
+          <div class="predict-header">
+            <h1>🎯 Salary Predictor</h1>
+            <p>Enter candidate parameters below to calculate a calibrated, data-driven compensation prediction.</p>
+          </div>
+
+          <div class="predict-layout">
+
+            <!-- Input Form Card -->
+            <div class="glass-card">
+              <div class="card-title-row">
+                <h3><span>📋</span> Candidate Details</h3>
+                <span class="card-badge">Trained on 6,700+ records</span>
+              </div>
+
+              <form id="salaryForm" novalidate>
+                <div class="form-grid">
+
+                  <!-- Age (Stepper) -->
+                  <div class="field">
+                    <label for="age"><span>🎂</span> Age</label>
+                    <div class="stepper-wrap">
+                      <button type="button" class="stepper-btn" onclick="stepVal('age', -1)">−</button>
+                      <input type="number" id="age" name="age" class="stepper-input" value="25" min="18" max="80" step="1" required />
+                      <button type="button" class="stepper-btn" onclick="stepVal('age', 1)">+</button>
+                    </div>
+                    <span class="field-error" id="age-error">Valid working age (18–80).</span>
+                  </div>
+
+                  <!-- Education Level -->
+                  <div class="field">
+                    <label for="education_level"><span>🎓</span> Education Level</label>
+                    <select id="education_level" name="education_level" class="styled-select" required>
+                      <option value="Bachelor's" selected>Bachelor's</option>
+                      <option value="High School">High School</option>
+                      <option value="Master's">Master's</option>
+                      <option value="PhD">PhD</option>
+                    </select>
+                    <span class="field-error" id="education_level-error">Please select education.</span>
+                  </div>
+
+                  <!-- Years of Experience (Stepper) -->
+                  <div class="field">
+                    <label for="years_of_experience"><span>📅</span> Experience (Years)</label>
+                    <div class="stepper-wrap">
+                      <button type="button" class="stepper-btn" onclick="stepVal('years_of_experience', -1)">−</button>
+                      <input type="number" id="years_of_experience" name="years_of_experience" class="stepper-input" value="2" min="0" max="60" step="1" required />
+                      <button type="button" class="stepper-btn" onclick="stepVal('years_of_experience', 1)">+</button>
+                    </div>
+                    <span class="field-error" id="years_of_experience-error">Valid experience (0–60).</span>
+                  </div>
+
+                  <!-- Gender -->
+                  <div class="field">
+                    <label for="gender"><span>⚧️</span> Gender</label>
+                    <select id="gender" name="gender" class="styled-select" required>
+                      <option value="Male" selected>Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                    <span class="field-error" id="gender-error">Please select gender.</span>
+                  </div>
+
+                  <!-- Job Title (Autocomplete) -->
+                  <div class="field full">
+                    <label for="job_title"><span>💼</span> Job Title</label>
+                    <input type="text" id="job_title" name="job_title" class="styled-input" list="job_title_list" value="Software Engineer" placeholder="Search or select job title..." autocomplete="off" required />
+                    <datalist id="job_title_list"></datalist>
+                    <span class="field-error" id="job_title-error">Select recognized job title.</span>
+                  </div>
+
+                  <!-- Model Badge (read-only) -->
+                  <div class="field full">
+                    <label><span>🤖</span> Machine Learning Model</label>
+                    <div class="model-badge-readonly">🌲 Random Forest (Tuned) — R² 0.9637</div>
+                  </div>
+
+                </div>
+
+                <!-- Predict Button -->
+                <button type="submit" class="btn-predict-coral" id="predictBtn">
+                  <span class="spinner" id="spinner"></span>
+                  <span id="btnLabel">🚀 Predict Candidate Salary</span>
+                </button>
+              </form>
+
+            </div>
+
+            <!-- Results Column -->
+            <div class="results-col">
+
+              <!-- Empty State (Shown before first prediction) -->
+              <div class="glass-card empty-state-card" id="emptyState">
+                <div class="empty-icon">📊</div>
+                <h3>Awaiting Prediction</h3>
+                <p>Adjust candidate attributes on the left and click <strong>Predict Candidate Salary</strong> to generate the compensation profile.</p>
+              </div>
+
+              <!-- Main Prediction Output (Visible after prediction) -->
+              <div class="prediction-hero-card" id="predictionHero" style="display:none;">
+                <div class="prediction-meta-top">
+                  <span class="model-tag" id="dispModelTag">Random Forest (Tuned)</span>
+                  <span class="accuracy-tag" id="dispModelAcc">96.37% R²</span>
+                </div>
+
+                <div class="result-main-box">
+                  <div class="result-amount" id="dispSalaryAmt">₹0</div>
+                  <div class="result-lpa-pill" id="dispSalaryLpa">0.00 LPA</div>
+                  <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.4rem;">Annual Estimated Salary (INR)</div>
+                </div>
+
+                <!-- Sub-metrics -->
+                <div class="sub-metrics-grid">
+                  <div class="sub-metric-box">
+                    <div class="sub-metric-label">Monthly In-Hand</div>
+                    <div class="sub-metric-val" id="dispMonthlyInhand">₹0 / mo</div>
+                  </div>
+                  <div class="sub-metric-box">
+                    <div class="sub-metric-label">USD Equivalent</div>
+                    <div class="sub-metric-val" id="dispUsdEquiv">$0 / yr</div>
+                  </div>
+                </div>
+
+                <!-- Percentile Benchmark Gauge -->
+                <div class="percentile-bar-wrap">
+                  <div class="percentile-header">
+                    <span>Industry Benchmark</span>
+                    <strong id="dispPercentileText">Top 50%</strong>
+                  </div>
+                  <div class="percentile-track">
+                    <div class="percentile-fill" id="dispPercentileFill"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Candidate Profile Summary -->
+              <div class="glass-card" id="candidateProfileCard" style="display:none;">
+                <div class="card-title-row">
+                  <h3><span>📋</span> Candidate Profile</h3>
+                  <span class="card-badge" id="dispProfileRoleTag">Software Engineer</span>
+                </div>
+
+                <table class="candidate-table">
+                  <tbody>
+                    <tr>
+                      <td class="attr-name">Age</td>
+                      <td class="attr-val" id="profAge">25 years</td>
+                    </tr>
+                    <tr>
+                      <td class="attr-name">Gender</td>
+                      <td class="attr-val" id="profGender">Male</td>
+                    </tr>
+                    <tr>
+                      <td class="attr-name">Education Level</td>
+                      <td class="attr-val" id="profEdu">Bachelor's</td>
+                    </tr>
+                    <tr>
+                      <td class="attr-name">Job Title</td>
+                      <td class="attr-val" id="profJob">Software Engineer</td>
+                    </tr>
+                    <tr>
+                      <td class="attr-name">Years of Experience</td>
+                      <td class="attr-val" id="profExp">2 years</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="result-actions">
+                  <button type="button" class="btn-action-outline" onclick="copyPredictionSummary()">
+                    <span>📋</span> Copy Summary
+                  </button>
+                  <button type="button" class="btn-action-outline" onclick="window.print()">
+                    <span>📥</span> Print Slip
+                  </button>
+                </div>
+              </div>
+
+              <!-- Career Growth Forecaster (Exclusive Feature) -->
+              <div class="glass-card" id="careerGrowthCard" style="display:none;">
+                <div class="card-title-row">
+                  <h3><span>📈</span> Career Growth Forecaster</h3>
+                  <span class="card-badge">ML Projections</span>
+                </div>
+                <div class="projections-grid">
+                  <div class="proj-card">
+                    <div class="proj-years" id="proj2YearsLabel">+2 Years Exp</div>
+                    <div class="proj-salary" id="proj2Salary">₹0 LPA</div>
+                    <div class="proj-growth" id="proj2Growth">+24% Expected</div>
+                  </div>
+                  <div class="proj-card">
+                    <div class="proj-years" id="proj5YearsLabel">+5 Years Exp</div>
+                    <div class="proj-salary" id="proj5Salary">₹0 LPA</div>
+                    <div class="proj-growth" id="proj5Growth">+60% Expected</div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /results-col -->
+
+          </div><!-- /predict-layout -->
+
+        </section>
+
+        <!-- ================================================================
+             VIEW 2: EDA & Insights
+             ================================================================ -->
+        <section class="view-panel" id="view-eda">
+          <div class="predict-header">
+            <h1>📊 Exploratory Data Analysis &amp; Insights</h1>
+            <p>Comprehensive statistical breakdown of 6,700 records in the compensation dataset.</p>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="eda-kpis">
+            <div class="kpi-card">
+              <div class="kpi-icon">👥</div>
+              <div class="kpi-data">
+                <h4 id="kpiRecords">6,700</h4>
+                <p>Verified Employees</p>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon">💼</div>
+              <div class="kpi-data">
+                <h4 id="kpiJobCount">48</h4>
+                <p>Industry Job Roles</p>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon">💰</div>
+              <div class="kpi-data">
+                <h4 id="kpiAvgSalary">₹11.70L</h4>
+                <p>Average Annual Salary</p>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-icon">🎯</div>
+              <div class="kpi-data">
+                <h4 id="kpiMedianSalary">₹10.25L</h4>
+                <p>Median Salary</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="charts-grid">
+            
+            <div class="glass-card chart-card">
+              <div class="card-title-row">
+                <h3><span>🎓</span> Salary by Education Level</h3>
+                <span class="card-badge">Average ₹</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartEducation"></canvas>
+              </div>
+            </div>
+
+            <div class="glass-card chart-card">
+              <div class="card-title-row">
+                <h3><span>📈</span> Experience vs. Salary Growth Curve</h3>
+                <span class="card-badge">Trend</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartExperience"></canvas>
+              </div>
+            </div>
+
+            <div class="glass-card chart-card">
+              <div class="card-title-row">
+                <h3><span>🏆</span> Top 10 Highest Compensated Roles</h3>
+                <span class="card-badge">Average ₹</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartTopJobs"></canvas>
+              </div>
+            </div>
+
+            <div class="glass-card chart-card">
+              <div class="card-title-row">
+                <h3><span>⚧️</span> Gender Representation &amp; Pay Parity</h3>
+                <span class="card-badge">Distribution</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartGender"></canvas>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Key Insights Card -->
+          <div class="glass-card" style="margin-top:1.5rem;">
+            <div class="card-title-row">
+              <h3><span>💡</span> Key Insights</h3>
+              <span class="card-badge">Random Forest Feature Importance</span>
+            </div>
+            <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.75rem;">
+              <li style="display:flex; align-items:flex-start; gap:0.6rem; color:var(--text-muted); font-size:0.9rem;">
+                <span style="color:var(--accent-cyan); font-size:1rem; flex-shrink:0;">📌</span>
+                <span><strong style="color:var(--text-primary);">Years of Experience</strong> is the strongest salary driver, accounting for approximately <strong style="color:var(--accent-cyan);">70.77%</strong> of model importance. More experience reliably translates to higher compensation across all roles.</span>
+              </li>
+              <li style="display:flex; align-items:flex-start; gap:0.6rem; color:var(--text-muted); font-size:0.9rem;">
+                <span style="color:var(--accent-emerald); font-size:1rem; flex-shrink:0;">📌</span>
+                <span><strong style="color:var(--text-primary);">Job Title</strong> is the second most influential factor at <strong style="color:var(--accent-emerald);">~22.34%</strong>. Senior and specialized roles (e.g., C-Suite, Data Scientist Lead) command significantly higher salaries than entry-level equivalents.</span>
+              </li>
+              <li style="display:flex; align-items:flex-start; gap:0.6rem; color:var(--text-muted); font-size:0.9rem;">
+                <span style="color:var(--primary-light); font-size:1rem; flex-shrink:0;">📌</span>
+                <span><strong style="color:var(--text-primary);">Education Level</strong> shows a clear salary progression: <strong style="color:var(--text-primary);">High School &lt; Bachelor's &lt; Master's &lt; PhD</strong>. Higher degrees unlock higher salary bands, contributing ~5.59% to model decisions.</span>
+              </li>
+              <li style="display:flex; align-items:flex-start; gap:0.6rem; color:var(--text-muted); font-size:0.9rem;">
+                <span style="color:var(--text-dim); font-size:1rem; flex-shrink:0;">📌</span>
+                <span><strong style="color:var(--text-primary);">Gender</strong> and <strong style="color:var(--text-primary);">Age</strong> have very low individual influence on predicted salary (0.28% and 1.01% respectively), reflecting that experience and role are far more predictive than demographic factors.</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             VIEW 3: Model Performance
+             ================================================================ -->
+        <section class="view-panel" id="view-metrics">
+          <div class="predict-header">
+            <h1>📈 Random Forest Model Performance</h1>
+            <p>Evaluation metrics, feature importance analysis, and configuration details for the deployed model.</p>
+          </div>
+
+          <div class="metrics-overview-grid">
+            <div class="metric-kpi">
+              <div class="label">Algorithm</div>
+              <div class="val" style="color:var(--accent-emerald);">Random Forest</div>
+              <div class="sub">Tuned Ensemble Model</div>
+            </div>
+            <div class="metric-kpi">
+              <div class="label">R² Score</div>
+              <div class="val">0.9637</div>
+              <div class="sub">96.37% Variance Explained</div>
+            </div>
+            <div class="metric-kpi">
+              <div class="label">MAE</div>
+              <div class="val">₹85,170</div>
+              <div class="sub">Mean Absolute Error</div>
+            </div>
+            <div class="metric-kpi">
+              <div class="label">RMSE</div>
+              <div class="val">₹1,23,676</div>
+              <div class="sub">Root Mean Squared Error</div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="glass-card chart-card">
+              <div class="card-title-row">
+                <h3><span>🎯</span> Feature Importance Ranking</h3>
+                <span class="card-badge">Random Forest Weights</span>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chartFeatureImportance"></canvas>
+              </div>
+            </div>
+
+            <!-- Random Forest Configuration Card -->
+            <div class="glass-card" style="display:flex; flex-direction:column; justify-content:center;">
+              <div class="card-title-row">
+                <h3><span>⚙️</span> Random Forest Configuration</h3>
+                <span class="card-badge">Hyperparameters</span>
+              </div>
+              <table class="models-table" style="margin-top:0.75rem;">
+                <tbody>
+                  <tr>
+                    <td style="color:var(--text-muted);">n_estimators</td>
+                    <td><strong>200</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">max_depth</td>
+                    <td><strong>20</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">random_state</td>
+                    <td><strong>42</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">Preprocessing</td>
+                    <td><strong>StandardScaler + OneHotEncoder</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">Dataset Size</td>
+                    <td><strong>6,700 records</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">Unique Job Titles</td>
+                    <td><strong>48</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">Test Set</td>
+                    <td><strong>1,340 samples</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">R² (test)</td>
+                    <td><strong style="color:var(--accent-emerald);">0.9637</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">MAE (test)</td>
+                    <td><strong>₹85,170.51</strong></td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);">RMSE (test)</td>
+                    <td><strong>₹1,23,676.25</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             VIEW 4: Prediction History
+             ================================================================ -->
+        <section class="view-panel" id="view-history">
+          <div class="predict-header">
+            <h1>🕒 Prediction History</h1>
+            <p>Review and export all salary predictions made during your session.</p>
+          </div>
+
+          <div class="glass-card history-table-card">
+            <div class="card-title-row">
+              <h3><span>📜</span> Candidate Log</h3>
+              <button class="btn-auth-trigger" onclick="loadHistory()">🔄 Refresh History</button>
+            </div>
+            <table class="models-table" id="historyTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Job Title</th>
+                  <th>Experience</th>
+                  <th>Education</th>
+                  <th>Predicted Salary</th>
+                  <th>LPA</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                <tr>
+                  <td colspan="6" style="text-align:center; color:var(--text-muted); padding:2rem;">No prediction records logged yet. Make your first prediction!</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             VIEW 5: About Project
+             ================================================================ -->
+        <section class="view-panel" id="view-about">
+          <div class="predict-header">
+            <h1>ℹ️ About This Project</h1>
+            <p>Architectural breakdown, machine learning pipeline methodology, and technology stack.</p>
+          </div>
+
+          <div class="about-grid">
+            <div class="glass-card">
+              <div class="card-title-row">
+                <h3><span>🧠</span> System Architecture &amp; Methodology</h3>
+              </div>
+
+              <div class="flow-step">
+                <div class="step-num">1</div>
+                <div>
+                  <strong>Data Ingestion &amp; Preprocessing</strong>
+                  <p style="color:var(--text-muted); font-size:0.88rem; margin-top:0.25rem;">
+                    Cleaned 6,700 employee records, imputed missing fields, normalized string encodings, and verified numerical distributions across age and experience.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flow-step">
+                <div class="step-num">2</div>
+                <div>
+                  <strong>Feature Transformation Pipeline</strong>
+                  <p style="color:var(--text-muted); font-size:0.88rem; margin-top:0.25rem;">
+                    Utilized scikit-learn's <code>ColumnTransformer</code> to apply <code>StandardScaler</code> to numerical features (Age, Years of Experience) and <code>OneHotEncoder(handle_unknown='ignore')</code> to categorical features (Gender, Education Level, 48 Job Roles).
+                  </p>
+                </div>
+              </div>
+
+              <div class="flow-step">
+                <div class="step-num">3</div>
+                <div>
+                  <strong>Model Selection &amp; Hyperparameter Tuning</strong>
+                  <p style="color:var(--text-muted); font-size:0.88rem; margin-top:0.25rem;">
+                    Trained and tuned a Random Forest Regressor (200 estimators, max depth 20), achieving 96.37% R² on unseen test data.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flow-step">
+                <div class="step-num">4</div>
+                <div>
+                  <strong>REST API &amp; Interactive UI Deployment</strong>
+                  <p style="color:var(--text-muted); font-size:0.88rem; margin-top:0.25rem;">
+                    Exposed via a Python Flask microservice, coupled with modern vanilla CSS &amp; JavaScript for high responsiveness and zero unnecessary bundle overhead.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass-card">
+              <div class="card-title-row">
+                <h3><span>🛠️</span> Tech Stack</h3>
+              </div>
+              <div class="tech-badges">
+                <span class="tech-tag">🐍 Python 3.12+</span>
+                <span class="tech-tag">⚡ Flask 3.1</span>
+                <span class="tech-tag">🤖 scikit-learn 1.9</span>
+                <span class="tech-tag">🌲 Random Forest</span>
+                <span class="tech-tag">🐼 pandas</span>
+                <span class="tech-tag">📊 Chart.js</span>
+                <span class="tech-tag">🗄️ SQLite3</span>
+                <span class="tech-tag">🎨 Modern CSS3</span>
+              </div>
+
+              <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border);">
+                <h4 style="font-size:0.95rem; margin-bottom:0.4rem;">Student Developer</h4>
+                <p style="font-size:0.85rem; color:var(--text-muted);">
+                  Built for the Artificial Intelligence &amp; Machine Learning (AIML) Capstone Project.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div><!-- /main-wrapper -->
+
+  </div><!-- /app-container -->
+
+  <!-- ====================================================================
+       Authentication Modal (<dialog>)
+       ==================================================================== -->
+  <dialog class="auth-dialog" id="authDialog">
+    <div class="auth-card">
+      <button class="auth-close-btn" onclick="closeAuthModal()" aria-label="Close dialog">✕</button>
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab-btn active" id="tabSignInBtn" onclick="switchAuthTab('signin')">Sign In</button>
+        <button type="button" class="auth-tab-btn" id="tabSignUpBtn" onclick="switchAuthTab('signup')">Create Account</button>
+      </div>
+
+      <!-- Sign In Form -->
+      <form class="auth-form" id="signInForm" onsubmit="handleSignIn(event)">
+        <div class="field">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" class="styled-input" placeholder="e.g. sudesh@example.com" required />
+        </div>
+        <div class="field">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="styled-input" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn-auth-submit" id="signInSubmitBtn">Sign In</button>
+        <button type="button" class="guest-btn" onclick="continueAsGuest()">Continue as Guest</button>
+      </form>
+
+      <!-- Sign Up Form (hidden by default) -->
+      <form class="auth-form" id="signUpForm" style="display:none;" onsubmit="handleSignUp(event)">
+        <div class="field">
+          <label for="regName">Full Name</label>
+          <input type="text" id="regName" class="styled-input" placeholder="e.g. Sudesh Gade" required />
+        </div>
+        <div class="field">
+          <label for="regEmail">Email Address</label>
+          <input type="email" id="regEmail" class="styled-input" placeholder="e.g. sudesh@example.com" required />
+        </div>
+        <div class="field">
+          <label for="regPassword">Password (min 6 characters)</label>
+          <input type="password" id="regPassword" class="styled-input" placeholder="••••••••" minlength="6" required />
+        </div>
+        <div class="field">
+          <label for="regRole">Role</label>
+          <select id="regRole" class="styled-select">
+            <option value="Student">Student / Researcher</option>
+            <option value="HR Lead">HR &amp; Recruiter</option>
+            <option value="Employee">Software Professional</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-auth-submit" id="signUpSubmitBtn">Create Account</button>
+      </form>
+
+    </div>
+  </dialog>
+
+  <!-- ====================================================================
+       Client-Side Logic & Chart Integration
+       ==================================================================== -->
+  <script>
+    /* ---- State Management ---- */
+    let validJobTitles = [];
+    let currentUser = null;
+    let lastPredictionData = null;
+    let edaLoaded = false;
+    let metricsLoaded = false;
+
+    /* ---- Navigation Handling ---- */
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewPanels = document.querySelectorAll('.view-panel');
+    const topbarHeading = document.getElementById('topbarViewHeading');
+
+    const viewTitles = {
+      'view-predict': '🎯 Salary Predictor / Candidate Estimation',
+      'view-eda': '📊 Labor Market EDA & Distribution Analytics',
+      'view-metrics': '📈 Random Forest Model Performance',
+      'view-history': '🕒 Candidate Prediction Logs & Session History',
+      'view-about': 'ℹ️ Architecture & Machine Learning Pipeline'
+    };
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const targetView = item.dataset.view;
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+
+        viewPanels.forEach(p => p.classList.remove('active'));
+        const panel = document.getElementById(targetView);
+        if (panel) panel.classList.add('active');
+
+        topbarHeading.textContent = viewTitles[targetView] || 'SalaryAI Pro';
+
+        // Trigger EDA chart rendering if navigating to EDA tab
+        if (targetView === 'view-eda' && !edaLoaded) {
+          loadEdaData();
+        }
+        if (targetView === 'view-metrics' && !metricsLoaded) {
+          loadMetricsData();
+        }
+        if (targetView === 'view-history') {
+          loadHistory();
+        }
+
+        // Close mobile sidebar if open
+        document.getElementById('sidebar').classList.remove('mobile-open');
+      });
+    });
+
+    /* ---- Mobile Sidebar Toggle ---- */
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    mobileBtn.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('mobile-open');
+    });
+
+    /* ---- Theme Toggle ---- */
+    const themeBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('salary_app_theme', theme);
+      if (theme === 'light') {
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Dark';
+      } else {
+        themeIcon.textContent = '☀️';
+        themeLabel.textContent = 'Light';
+      }
+    }
+
+    const savedTheme = localStorage.getItem('salary_app_theme') || 'dark';
+    applyTheme(savedTheme);
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    /* ---- Stepper Input Helper ---- */
+    function stepVal(id, delta) {
+      const input = document.getElementById(id);
+      let val = Number(input.value) || 0;
+      val += delta;
+      if (input.min !== '' && val < Number(input.min)) val = Number(input.min);
+      if (input.max !== '' && val > Number(input.max)) val = Number(input.max);
+      input.value = val;
+    }
+
+    /* ---- Quick Demo Sample Filler ---- */
+    document.getElementById('quickDemoBtn').addEventListener('click', () => {
+      document.getElementById('age').value = 28;
+      document.getElementById('years_of_experience').value = 4;
+      document.getElementById('education_level').value = "Bachelor's";
+      document.getElementById('gender').value = "Male";
+      document.getElementById('job_title').value = "Software Engineer";
+      showToast('⚡ Loaded candidate profile: 28y, 4y Exp, Software Engineer');
+    });
+
+    /* ---- Fetch Valid Job Titles ---- */
+    (async () => {
+      try {
+        const res = await fetch('/job-titles');
+        if (res.ok) {
+          validJobTitles = await res.json();
+          const dl = document.getElementById('job_title_list');
+          validJobTitles.forEach(title => {
+            const opt = document.createElement('option');
+            opt.value = title;
+            dl.appendChild(opt);
+          });
+        }
+      } catch (_) {}
+    })();
+
+    /* ---- Check Current Session / User ---- */
+    async function checkAuthStatus() {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.logged_in && data.user) {
+          currentUser = data.user;
+          updateUserUI(data.user);
+        } else {
+          currentUser = null;
+          updateUserUI(null);
+        }
+      } catch (_) {}
+    }
+    checkAuthStatus();
+
+    function updateUserUI(user) {
+      const nameDisp = document.getElementById('userNameDisplay');
+      const roleDisp = document.getElementById('userRoleDisplay');
+      const avatar = document.getElementById('userAvatar');
+      const trigger = document.getElementById('authBtnTrigger');
+
+      if (user) {
+        nameDisp.textContent = user.name;
+        roleDisp.textContent = user.role || 'Member';
+        avatar.textContent = user.name.charAt(0).toUpperCase();
+        trigger.textContent = 'Logout';
+        trigger.onclick = handleLogout;
+      } else {
+        nameDisp.textContent = 'Guest User';
+        roleDisp.textContent = 'Visitor';
+        avatar.textContent = 'G';
+        trigger.textContent = 'Sign In';
+        trigger.onclick = openAuthModal;
+      }
+    }
+
+    /* ---- Modal Dialog Controls ---- */
+    const authDialog = document.getElementById('authDialog');
+    function openAuthModal() {
+      authDialog.showModal();
+    }
+    function closeAuthModal() {
+      authDialog.close();
+    }
+    function switchAuthTab(tab) {
+      const signInTab = document.getElementById('tabSignInBtn');
+      const signUpTab = document.getElementById('tabSignUpBtn');
+      const signInForm = document.getElementById('signInForm');
+      const signUpForm = document.getElementById('signUpForm');
+
+      if (tab === 'signin') {
+        signInTab.classList.add('active');
+        signUpTab.classList.remove('active');
+        signInForm.style.display = 'flex';
+        signUpForm.style.display = 'none';
+      } else {
+        signUpTab.classList.add('active');
+        signInTab.classList.remove('active');
+        signUpForm.style.display = 'flex';
+        signInForm.style.display = 'none';
+      }
+    }
+
+    function continueAsGuest() {
+      closeAuthModal();
+      showToast('Continuing in Guest Mode');
+    }
+
+    async function handleSignIn(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('signInSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentUser = data.user;
+          updateUserUI(data.user);
+          closeAuthModal();
+          showToast(`Welcome back, ${data.user.name}!`);
+        } else {
+          alert(data.error || 'Login failed. Please check credentials.');
+        }
+      } catch (err) {
+        alert('Server unreachable. Please check backend connection.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    async function handleSignUp(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const role = document.getElementById('regRole').value;
+      const btn = document.getElementById('signUpSubmitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating Account...';
+
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password, role })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentUser = data.user;
+          updateUserUI(data.user);
+          closeAuthModal();
+          showToast(`Account created! Welcome, ${data.user.name}.`);
+        } else {
+          alert(data.error || 'Signup failed.');
+        }
+      } catch (err) {
+        alert('Server error while registering.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        currentUser = null;
+        updateUserUI(null);
+        showToast('Signed out successfully');
+      } catch (_) {}
+    }
+
+    /* ---- Prediction Form Submission ---- */
+    const salaryForm = document.getElementById('salaryForm');
+    const predictBtn = document.getElementById('predictBtn');
+    const btnLabel = document.getElementById('btnLabel');
+    const spinner = document.getElementById('spinner');
+
+    salaryForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const age = Number(document.getElementById('age').value);
+      const gender = document.getElementById('gender').value;
+      const education_level = document.getElementById('education_level').value;
+      const job_title = document.getElementById('job_title').value.trim();
+      const years_of_experience = Number(document.getElementById('years_of_experience').value);
+
+      // Validation
+      if (!job_title || job_title.length < 2) {
+        alert('Please enter a valid job title.');
+        return;
+      }
+      if (years_of_experience >= age) {
+        alert('Years of experience cannot be greater than or equal to age.');
+        return;
+      }
+
+      // UI Loading state
+      predictBtn.disabled = true;
+      spinner.style.display = 'inline-block';
+      btnLabel.textContent = 'Running ML Prediction...';
+
+      try {
+        const res = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            age,
+            gender,
+            education_level,
+            job_title,
+            years_of_experience
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          lastPredictionData = {
+            candidate: { age, gender, education_level, job_title, years_of_experience },
+            result: data
+          };
+          renderPredictionResult(data, { age, gender, education_level, job_title, years_of_experience });
+        } else {
+          alert('Prediction error: ' + (data.error || 'Unknown issue'));
+        }
+      } catch (err) {
+        alert('Could not reach backend API. Make sure python app.py is running.');
+      } finally {
+        predictBtn.disabled = false;
+        spinner.style.display = 'none';
+        btnLabel.textContent = '🚀 Predict Candidate Salary';
+      }
+    });
+
+    /* ---- Render Prediction Results & Rolling Counter ---- */
+    function renderPredictionResult(data, candidate) {
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('predictionHero').style.display = 'block';
+      document.getElementById('candidateProfileCard').style.display = 'block';
+      document.getElementById('careerGrowthCard').style.display = 'block';
+
+      // Update Model tags
+      document.getElementById('dispModelTag').textContent = data.model_name || 'Random Forest (Tuned)';
+      document.getElementById('dispModelAcc').textContent = data.model_accuracy || '96.37% R²';
+
+      // Animate number roll-up
+      animateNumber('dispSalaryAmt', 0, data.predicted_salary, 800, (v) => '₹' + Math.round(v).toLocaleString('en-IN'));
+      document.getElementById('dispSalaryLpa').textContent = data.salary_lpa;
+      document.getElementById('dispMonthlyInhand').textContent = data.monthly_inhand;
+      document.getElementById('dispUsdEquiv').textContent = data.usd_equivalent;
+
+      // Percentile Gauge
+      const pct = data.percentile || 50;
+      document.getElementById('dispPercentileText').textContent = `Top ${100 - pct}% in Industry`;
+      setTimeout(() => {
+        document.getElementById('dispPercentileFill').style.width = pct + '%';
+      }, 100);
+
+      // Candidate Profile Summary Card
+      document.getElementById('dispProfileRoleTag').textContent = candidate.job_title;
+      document.getElementById('profAge').textContent = `${candidate.age} years`;
+      document.getElementById('profGender').textContent = candidate.gender;
+      document.getElementById('profEdu').textContent = candidate.education_level;
+      document.getElementById('profJob').textContent = candidate.job_title;
+      document.getElementById('profExp').textContent = `${candidate.years_of_experience} years`;
+
+      // Career Growth Projections
+      if (data.projections) {
+        const p2 = data.projections.plus_2_years;
+        const p5 = data.projections.plus_5_years;
+        if (p2) {
+          document.getElementById('proj2YearsLabel').textContent = `+2 Years (${p2.years}y)`;
+          document.getElementById('proj2Salary').textContent = p2.salary_lpa;
+          const pct2 = Math.round(((p2.salary - data.predicted_salary) / data.predicted_salary) * 100);
+          document.getElementById('proj2Growth').textContent = `+${pct2}% Projected`;
+        }
+        if (p5) {
+          document.getElementById('proj5YearsLabel').textContent = `+5 Years (${p5.years}y)`;
+          document.getElementById('proj5Salary').textContent = p5.salary_lpa;
+          const pct5 = Math.round(((p5.salary - data.predicted_salary) / data.predicted_salary) * 100);
+          document.getElementById('proj5Growth').textContent = `+${pct5}% Projected`;
+        }
+      }
+
+      showToast(`🎯 Prediction Generated: ${data.salary_lpa}`);
+    }
+
+    /* Number Counting Animation */
+    function animateNumber(elementId, start, end, duration, formatter) {
+      const el = document.getElementById(elementId);
+      const range = end - start;
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+        const current = start + range * ease;
+        el.textContent = formatter ? formatter(current) : Math.round(current);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    /* ---- Clipboard Copy ---- */
+    function copyPredictionSummary() {
+      if (!lastPredictionData) return;
+      const c = lastPredictionData.candidate;
+      const r = lastPredictionData.result;
+      const summary = `SalaryAI Pro Candidate Summary:
+Job Title: ${c.job_title}
+Experience: ${c.years_of_experience} years | Age: ${c.age}
+Education: ${c.education_level} | Gender: ${c.gender}
+Model Used: ${r.model_name} (${r.model_accuracy})
+Predicted Salary: ₹${r.predicted_salary.toLocaleString('en-IN')} (${r.salary_lpa})
+Monthly In-Hand: ${r.monthly_inhand}`;
+
+      navigator.clipboard.writeText(summary).then(() => {
+        showToast('📋 Copied candidate profile to clipboard!');
+      });
+    }
+
+    /* ---- Toast Notifications ---- */
+    function showToast(msg) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    /* ---- Load History Records ---- */
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        const tbody = document.getElementById('historyTableBody');
+        if (data.success && data.history.length > 0) {
+          tbody.innerHTML = '';
+          data.history.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${row.created_at || 'Just now'}</td>
+              <td><strong>${row.job_title}</strong></td>
+              <td>${row.experience} yrs</td>
+              <td>${row.education}</td>
+              <td>₹${Math.round(row.predicted_salary).toLocaleString('en-IN')}</td>
+              <td><strong style="color:var(--accent-cyan);">${row.salary_lpa}</strong></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (_) {}
+    }
+
+    /* ====================================================================
+       Chart.js Visualizations (EDA & Metrics)
+       ==================================================================== */
+    async function loadEdaData() {
+      try {
+        const res = await fetch('/api/eda-stats');
+        const json = await res.json();
+        if (!json.success) return;
+        const d = json.data;
+
+        document.getElementById('kpiRecords').textContent = d.total_records.toLocaleString();
+        document.getElementById('kpiJobCount').textContent = d.unique_jobs;
+        document.getElementById('kpiAvgSalary').textContent = '₹' + (d.mean_salary / 100000).toFixed(2) + 'L';
+        document.getElementById('kpiMedianSalary').textContent = '₹' + (d.median_salary / 100000).toFixed(2) + 'L';
+
+        // 1. Education Chart
+        new Chart(document.getElementById('chartEducation'), {
+          type: 'bar',
+          data: {
+            labels: d.education.labels,
+            datasets: [{
+              label: 'Avg Salary (₹)',
+              data: d.education.averages,
+              backgroundColor: ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899'],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { ticks: { callback: v => '₹' + (v / 100000) + 'L' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+
+        // 2. Experience Curve
+        new Chart(document.getElementById('chartExperience'), {
+          type: 'line',
+          data: {
+            labels: d.experience_curve.years.map(y => y + 'y'),
+            datasets: [{
+              label: 'Salary Progression (₹)',
+              data: d.experience_curve.averages,
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              fill: true,
+              tension: 0.35,
+              pointRadius: 3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { ticks: { callback: v => '₹' + (v / 100000) + 'L' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+
+        // 3. Top Roles
+        new Chart(document.getElementById('chartTopJobs'), {
+          type: 'bar',
+          data: {
+            labels: d.top_jobs.labels,
+            datasets: [{
+              label: 'Avg Salary (₹)',
+              data: d.top_jobs.averages,
+              backgroundColor: '#f97316',
+              borderRadius: 6
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { callback: v => '₹' + (v / 100000) + 'L' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+              y: { grid: { display: false } }
+            }
+          }
+        });
+
+        // 4. Gender Representation
+        new Chart(document.getElementById('chartGender'), {
+          type: 'doughnut',
+          data: {
+            labels: d.gender.labels,
+            datasets: [{
+              data: d.gender.counts,
+              backgroundColor: ['#3b82f6', '#ec4899']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+
+        edaLoaded = true;
+      } catch (e) {
+        console.error('Failed to render EDA charts', e);
+      }
+    }
+
+    async function loadMetricsData() {
+      // Feature Importance — load from API, fallback to known values
+      let fiLabels = ['Experience', 'Job Title', 'Education', 'Age', 'Gender'];
+      let fiValues = [70.77, 22.34, 5.59, 1.01, 0.28];
+
+      try {
+        const fiRes = await fetch('/api/feature-importance');
+        const fiJson = await fiRes.json();
+        if (fiJson.success && fiJson.labels && fiJson.values) {
+          fiLabels = fiJson.labels;
+          fiValues = fiJson.values;
+        }
+      } catch (_) {}
+
+      new Chart(document.getElementById('chartFeatureImportance'), {
+        type: 'bar',
+        data: {
+          labels: fiLabels,
+          datasets: [{
+            label: 'Importance Weight (%)',
+            data: fiValues,
+            backgroundColor: ['#6366f1', '#818cf8', '#06b6d4', '#f59e0b', '#64748b'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+
+      metricsLoaded = true;
+    }
+  </script>
+
+</body>
+</html>

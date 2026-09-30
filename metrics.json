@@ -1,0 +1,18 @@
+{
+  "random_forest": {
+    "r2": 0.9637,
+    "mae": 85170.51,
+    "rmse": 123676.25
+  },
+  "best_model": "Random Forest",
+  "dataset": {
+    "samples": 6700,
+    "features_original": 5,
+    "job_titles": 48,
+    "test_samples": 1340,
+    "salary_mean": 1169725,
+    "salary_median": 1025001,
+    "salary_min": 261872,
+    "salary_max": 4132369
+  }
+}
