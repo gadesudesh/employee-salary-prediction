@@ -20,6 +20,13 @@ print("Predicted Salary (INR):", res_json.get("predicted_salary"))
 print("LPA:", res_json.get("salary_lpa", "").encode("ascii", "replace").decode("ascii"))
 print("Monthly In-hand:", res_json.get("monthly_inhand", "").encode("ascii", "replace").decode("ascii"))
 print("Percentile:", res_json.get("percentile"))
+ci = res_json.get("confidence_interval", {})
+print("Confidence Interval (Range):", ci.get("range_text", "").encode("ascii", "replace").decode("ascii"))
+print("Confidence Interval (Std Dev):", ci.get("std_dev_lpa", "").encode("ascii", "replace").decode("ascii"))
+factors = res_json.get("influencing_factors", [])
+print(f"Top Influencing Factors ({len(factors)}):")
+for f in factors:
+    print(f"  - {f.get('factor')}: {f.get('value')} ({f.get('weight_pct')}%) [{f.get('impact')}]")
 
 # Verify feature importance endpoint
 fi_response = requests.get("http://127.0.0.1:5000/api/feature-importance")

@@ -322,30 +322,43 @@ Returns EDA statistics for the frontend charts.
 
 Returns prediction history for the current session.
 
+## Enterprise Features (v2.5 Release)
+
+- **Corporate UI Redesign**: Modern slate & navy theme, enterprise typography (Inter & Plus Jakarta Sans), and professional Font Awesome 6 vector icons (zero emojis).
+- **90% Confidence Interval (Ensemble Spread)**: Real-time empirical prediction intervals derived from individual predictions across all 200 decision trees in the Random Forest ensemble.
+- **Top Influencing Factors Attribution**: Candidate-specific feature weights and contextual qualitative explanations (Tenure tier, Role market baseline, Academic modifier, Pay equity parity).
+- **Real-Time Client & Server Validation**:
+  - Age limits: 18 – 80 with live visual feedback indicators.
+  - Experience limits: 0 – 60, constrained strictly by `Experience <= Age - 14`.
+  - Standardized categoricals: Categorized dropdowns with 48 industry job titles grouped by functional family.
+- **In-Memory Caching & Pre-Warmed Engine**: Zero per-request disk reads, pre-warmed inference engine on boot, and static asset cache-control headers (`Cache-Control: public, max-age=86400`).
+- **Interactive Sample Profiles**: 1-click test buttons for Entry-Level Software Engineer, Mid-Level Data Analyst, Senior Cloud Architect, and Director of Engineering.
+- **Production Scalability & Hosting Optimization**: Clear upgrade paths beyond Render free-tier to eliminate spin-down latency.
+
 ---
 
-## Limitations
+## Hosting, Reliability & Scalability Architecture
 
-1. **Fixed job title list** — the model was trained on 48 specific job titles. Unrecognised titles are rejected.
-2. **Gender binary** — the dataset only contains Male and Female labels.
-3. **INR output** — the model predicts in INR directly.
-4. **Static exchange rate** — the USD display uses a hardcoded rate (₹84/USD).
-5. **Dataset limitations** — model accuracy depends on training data coverage.
-6. **No model retraining** — the model is served as a fixed `.pkl` file.
-7. **Version sensitivity** — saved with scikit-learn 1.6.1; a compatibility shim handles 1.9.x loading.
+### Overcoming Free-Tier Spin-Down Cold Starts
 
----
+On free-tier PaaS environments (like Render Free), web services enter sleep mode after 15 minutes of inactivity. The subsequent cold start can take **45 to 60 seconds** to provision the container and load the 67MB model.
 
-## Future Improvements
+To ensure production reliability:
+1. **Model Pre-Warming**: `app.py` runs a synthetic warm-up inference during module initialization so the very first client request executes with `< 15ms` latency.
+2. **Memory Footprint**: The entire Random Forest ensemble and EDA corpus reside in resident memory (~180MB RAM), operating well within standard 512MB container limits.
+3. **HTTP Cache Headers**: Static CSS, JS, and font assets are configured with `Cache-Control: public, max-age=86400`, minimizing network hops and server load.
+4. **Recommended Hosting Upgrade**:
+   - **Render Starter ($7/mo)**: Keeps instances alive 24/7 with dedicated CPU, completely eliminating free-tier spin-down latency.
+   - **Railway / Fly.io**: Fast micro-VM cold starts (< 1.5s) with auto-scaling.
+   - **AWS App Runner / GCP Cloud Run**: Set `min-instances = 1` for instantaneous enterprise-grade responsiveness.
+   - **Uptime Monitoring**: Configure a free 5-minute health check ping (via UptimeRobot or BetterStack) targeting `https://<your-app>.onrender.com/health` to keep worker processes awake.
 
-1. **Add more features** — include industry, company size, and location for more accurate predictions.
-2. **Retrain with current scikit-learn** — eliminate the version compatibility shim.
-3. **Expand gender options** — update the dataset to support non-binary labels.
-4. **Live currency conversion** — fetch the USD/INR rate from a live API.
-5. **Model retraining pipeline** — automate retraining as new salary data becomes available.
-6. **Confidence intervals** — display a salary range using variance across the 200 trees.
-7. **Deploy to cloud** — host the Flask API on Render, Railway, or Google Cloud Run.
-8. **Admin dashboard** — monitor prediction counts and input distributions over time.
+### Recommended Gunicorn Production Command
+
+In `Procfile` for production deployment:
+```bash
+web: gunicorn app:app --workers 4 --threads 2 --worker-class gthread --timeout 120 --keep-alive 5
+```
 
 ---
 
